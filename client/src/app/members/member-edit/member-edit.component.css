@@ -1,0 +1,34 @@
+.img-thumbnail {
+  margin: 25px;
+  width: 85%;
+  height: 85%;
+}
+
+.card-body{
+  padding: 0 25px;
+}
+
+.card-footer{
+  padding: 10px 15px;
+  background-color: #ffff;
+  border-top: none;
+}
+
+strong {
+  font-weight: 1000;
+}
+
+tab {
+  padding: 10px;
+}
+
+.alert {
+  position: relative;
+  padding: 1rem 1rem 0rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+}
+
+.btn-save-edit {
+  background-color: #51a351;
+}
