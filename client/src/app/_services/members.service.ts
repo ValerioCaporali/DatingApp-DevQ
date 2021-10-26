@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {environment} from "../../environments/environment";
 import {Observable, of} from "rxjs";
 import {Member} from "../_models/member";
 import {map} from "rxjs/operators";
+import {PaginatedResult} from "../_models/pagination";
 
 @Injectable({
   providedIn: 'root'
@@ -12,15 +13,25 @@ export class MembersService {
   baseUrl = environment.apiUrl;
   // invece di fare ogni volta una nuova richiesta, quando richiedo tutti gli utenti li salvo su questo array, ed utilizzo questo per andare a fare altre operazioni (come ad esempio cercare uno specifico utente)
   members: Member[] = [];
+  paginatedResult: PaginatedResult<Member[]> = new PaginatedResult<Member[]>();
 
   constructor(private http: HttpClient) { }
 
-  getMembers() {
-    if (this.members.length > 0) return of(this.members); // se l'array è gia popolato vuoldire che ho già richiesto tutti gli utenti, perciò invece di fare una nuova richiesta ritorno direttamente l'array
-    return this.http.get<Member[]>(this.baseUrl + 'users').pipe(
-      map(members => {
-        this.members = members; // se l'array non era popolato allora faccio la get e il risultato lo metto nell'array per le prossime richieste/operazioni
-        return members;
+  getMembers(page?: number, itemsPerPage?: number) {
+    let params = new HttpParams();
+
+    if (page !== null && itemsPerPage !== null) {
+      params = params.append('pageNumber', page.toString());
+      params = params.append('pageSize', itemsPerPage.toString());
+    }
+    // if (this.members.length > 0) return of(this.members); // se l'array è gia popolato vuoldire che ho già richiesto tutti gli utenti, perciò invece di fare una nuova richiesta ritorno direttamente l'array
+    return this.http.get<Member[]>(this.baseUrl + 'users', {observe: 'response', params}).pipe(
+      map(response => {
+        this.paginatedResult.result = response.body;
+        if (response.headers.get('Pagination') !== null) {
+          this.paginatedResult.pagination = JSON.parse(response.headers.get('Pagination'))
+        }
+        return this.paginatedResult;
       })
     )
   }

@@ -53,4 +53,25 @@ button, input{
   padding: 15px 0;
 }
 
+ul.pagination {
+  border: 1px solid #55595c !important;
+  border-radius: 110px;
+  padding: 3px;
+}
+
+.page-item.active .page-link {
+  z-index: 3;
+  color: #fff;
+  background-color: #55595c !important;
+  border-color: #55595c;
+}
+
+a.page-link {
+  border-radius: 10px !important;
+  color: #55595c;
+}
+
+#toast-container > div {
+  border-radius: 100px !important;
+}
 
