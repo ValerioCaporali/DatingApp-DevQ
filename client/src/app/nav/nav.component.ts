@@ -29,7 +29,7 @@ export class NavComponent implements OnInit {
       if (!this.user.photoUrl) this.toastr.info("Non hai ancora una immagine di profilo");
     }, error => {
       console.log(error);
-      this.toastr.error(error.error); // uso un toast per mostrare l'errore che arriva dal server API
+      // this.toastr.error(error.error); // uso un toast per mostrare l'errore che arriva dal server API
     })
   }
 

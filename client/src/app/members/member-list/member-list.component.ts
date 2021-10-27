@@ -7,6 +7,9 @@ import {MembersService} from "../../_services/members.service";
 import {Member} from "../../_models/member";
 import {Observable} from "rxjs";
 import {Pagination} from "../../_models/pagination";
+import {UserParams} from "../../_models/userParams";
+import {take} from "rxjs/operators";
+import {User} from "../../_models/user";
 
 @Component({
   selector: 'app-member-list',
@@ -28,24 +31,30 @@ export class MemberListComponent implements OnInit {
   // @ts-ignore
   members: Member[];
   pagination: Pagination;
-  pageNumber = 1;
-  pageSize = 5;
+  userParams: UserParams;
+  user: User;
 
-  constructor(private memberService: MembersService) { }
+  constructor(private memberService: MembersService, private accountService: AccountService) {
+    this.accountService.currentUser$.pipe(take(1)).subscribe(user => {
+      this.user = user;
+      this.userParams = new UserParams(user);
+    })
+  }
 
   ngOnInit(): void {
     this.loadMembers();
+    console.log(this.members);
   }
 
   loadMembers() {
-    this.memberService.getMembers(this.pageNumber, this.pageSize).subscribe(response => {
+    this.memberService.getMembers(this.userParams).subscribe(response => {
       this.members = response.result;
       this.pagination = response.pagination;
     })
   }
 
   pageChanged(event: any) {
-    this.pageNumber = event.page; // quando clicco il numero di un altra pagina, faccio una nuova richiesta passando quel numero
+    this.userParams.pageNumber = event.page; // quando clicco il numero di un altra pagina, faccio una nuova richiesta passando quel numero
     this.loadMembers();
   }
 
