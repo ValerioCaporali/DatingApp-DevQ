@@ -1,0 +1,11 @@
+button, input, select {
+  border-radius: 50px !important;
+}
+
+form {
+  margin-bottom: 28px !important;
+}
+
+h2 {
+  margin-bottom: 40px;
+}
