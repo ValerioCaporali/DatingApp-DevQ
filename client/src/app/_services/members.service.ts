@@ -3,9 +3,11 @@ import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {environment} from "../../environments/environment";
 import {Observable, of} from "rxjs";
 import {Member} from "../_models/member";
-import {map} from "rxjs/operators";
+import {map, take} from "rxjs/operators";
 import {PaginatedResult} from "../_models/pagination";
 import {UserParams} from "../_models/userParams";
+import {AccountService} from "./account.service";
+import {User} from "../_models/user";
 
 @Injectable({
   providedIn: 'root'
@@ -14,11 +16,39 @@ export class MembersService {
   baseUrl = environment.apiUrl;
   // invece di fare ogni volta una nuova richiesta, quando richiedo tutti gli utenti li salvo su questo array, ed utilizzo questo per andare a fare altre operazioni (come ad esempio cercare uno specifico utente)
   members: Member[] = [];
+  // qui salvo sia i parametri richiesti che il risultato, quando l'utente fa una richiesta controllo se i parametri che invia sono presenti qui, se lo sono il risultato lo ritorno direttamente da qui
+  memberCache = new Map();
 
-  constructor(private http: HttpClient) {
+  user:User;
+  userParams: UserParams;
+
+  constructor(private http: HttpClient, private accountService:AccountService) {
+    this.accountService.currentUser$.pipe(take(1)).subscribe(user => {
+      this.user = user;
+      this.userParams = new UserParams(user);
+    })
+  }
+
+  getUserParams() {
+    return this.userParams;
+  }
+
+  setUserParams(params: UserParams) {
+    this.userParams = params;
+  }
+
+  resetUserParams() {
+    this.userParams = new UserParams(this.user);
+    return this.userParams;
   }
 
   getMembers(userParams: UserParams) {
+
+    var response = this.memberCache.get(Object.values(userParams).join('-'));
+    if (response) {
+      return of(response);
+    }
+
     let params = this.getPaginationHeaders(userParams.pageNumber, userParams.pageSize);
 
     params = params.append('minAge', userParams.minAge.toString());
@@ -26,13 +56,26 @@ export class MembersService {
     params = params.append('gender', userParams.gender);
     params = params.append('orderBy', userParams.orderBy);
 
-    // if (this.members.length > 0) return of(this.members); // se l'array è gia popolato vuoldire che ho già richiesto tutti gli utenti, perciò invece di fare una nuova richiesta ritorno direttamente l'array
-    return this.getPaginatedResult<Member[]>(this.baseUrl + 'users', params);
+    return this.getPaginatedResult<Member[]>(this.baseUrl + 'users', params).pipe(
+    map(response => {
+      this.memberCache.set(Object.values(userParams).join('-'), response);
+      console.log(this.memberCache);
+      return response;
+    })
+    )
   }
 
   getMember(username: string) {
-    const member = this.members.find(x => x.username === username);
-    if (member !== undefined) return of(member); // se trovo l'utente nell'array lo ritorno direttamente dall'array (uso la funzione of perchè è un observable e perciò posso farci il subscribe allo stesso modo)
+    const member = [...this.memberCache.values()]
+      .reduce((arr, elem) => arr.concat(elem.result), [])
+      .find((member: Member) => member.username === username);
+
+    if (member) {
+      return of(member);
+    }
+
+    // const member = this.members.find(x => x.username === username);
+    // if (member !== undefined) return of(member); // se trovo l'utente nell'array lo ritorno direttamente dall'array (uso la funzione of perchè è un observable e perciò posso farci il subscribe allo stesso modo)
     return this.http.get<Member>(this.baseUrl + 'users/' + username); // altrimenti faccio la richiesta http.get
   }
 
