@@ -9,6 +9,7 @@ using API.DTOs;
 using API.Interfaces;
 using System.Linq;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 
 namespace API.Controllers
 {
@@ -18,10 +19,13 @@ namespace API.Controllers
         private readonly DataContext _context;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
 
-        public AccountController(DataContext context, ITokenService tokenService, IMapper mapper)
+        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService, IMapper mapper)
         {
-            _context = context;
+            _signInManager = signInManager;
+            _userManager = userManager;
             _tokenService = tokenService;
             _mapper = mapper;
         }
@@ -29,24 +33,25 @@ namespace API.Controllers
         [HttpPost("register")]
         // invece di restituire l'utente restituisco un Dto che contiene lo username e il token
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto){ // cosi i parametri nella registrazione li passo nel body della richiesta 
-            
-            using var hmac = new HMACSHA512(); // classe che uso per fare l'hash della password
 
             if(await UserExist(registerDto.Username)) return BadRequest("Username is taken"); // controllo se l'username esiste
 
             var user = _mapper.Map<AppUser>(registerDto);
 
             user.UserName = registerDto.Username.ToLower();
-            user.passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
-            user.passwordSalt = hmac.Key;
 
-            _context.Users.Add(user); // agguingo solamente l'entità
-            await _context.SaveChangesAsync(); // qui salvo l'entità nella tabella del databse
+            var result = await _userManager.CreateAsync(user, registerDto.Password);
+
+            if (!result.Succeeded) return BadRequest(result.Errors);
+
+            var roleResult = await _userManager.AddToRoleAsync(user, "Member");
+
+            if (!roleResult.Succeeded) return BadRequest(result.Errors);
 
             return new UserDto
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 KnownAs = user.KnowAs,
                 Gender = user.Gender
             };
@@ -56,27 +61,18 @@ namespace API.Controllers
         // invece di restituire l'utente restituisco un Dto che contiene username e token
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto) // cosi i parametri durante il login li prendo dal body della richiesta
         {
-            var user = await _context.Users
+            var user = await _userManager.Users
             .Include(p => p.Photos)
-            .SingleOrDefaultAsync(x => x.UserName == loginDto.Username); // cerco una corrispondenza e prendo l'utente per quello username
+            .SingleOrDefaultAsync(x => x.UserName == loginDto.Username.ToLower()); // cerco una corrispondenza e prendo l'utente per quello username
             
             if(user == null) return Unauthorized("Invalid username"); // se non trovo una corrispondenza con quell'username allora ritorno "non autorizzato"
-            
-            using var hmac = new HMACSHA512(user.passwordSalt);
 
-            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password)); // faccio l'hash della password inserita durante il login
-
-            // controllo che la password inserita durante il login sia uguale a quella nel database
-
-            for(int i = 0; i < computedHash.Length; i++)
-            {
-                if(computedHash[i] != user.passwordHash[i]) return Unauthorized("Invalid Password");
-            }
+            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
 
             return new UserDto
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
                 KnownAs = user.KnowAs,
                 Gender = user.Gender
@@ -87,7 +83,7 @@ namespace API.Controllers
 
         private async Task<bool> UserExist(string username)
         {
-            return await _context.Users.AnyAsync(x => x.UserName == username.ToLower());
+            return await _userManager.Users.AnyAsync(x => x.UserName == username.ToLower());
         }
 
     }

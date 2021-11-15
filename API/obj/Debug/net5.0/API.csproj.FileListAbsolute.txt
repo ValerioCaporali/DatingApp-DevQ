@@ -68,3 +68,4 @@ C:\Temp\Desktop\DatingApp\API\bin\Debug\net5.0\AutoMapper.Extensions.Microsoft.D
 C:\Temp\Desktop\DatingApp\API\bin\Debug\net5.0\CloudinaryDotNet.dll
 C:\Temp\Desktop\DatingApp\API\bin\Debug\net5.0\Newtonsoft.Json.dll
 C:\Temp\Desktop\DatingApp\API\bin\Debug\net5.0\appsettings.json
+C:\Temp\Desktop\DatingApp\API\bin\Debug\net5.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll

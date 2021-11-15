@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using API.Extensions;
+using Microsoft.AspNetCore.Identity;
 
 namespace API.Entities
 {
-    public class AppUser
+    public class AppUser : IdentityUser<int>
     {
-        
-        // if instead Id i would write identity f.e the entity framework will not understand the this is our primary key
-        public int Id { get; set; } // get to return propriety value. set to assign value to propriety
-        public String UserName { get; set; }
-        public byte[] passwordHash { get; set; }
-        public byte[] passwordSalt { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string KnowAs { get; set; }
         public DateTime Created { get; set; } = DateTime.Now;
@@ -28,6 +23,11 @@ namespace API.Entities
         
         public ICollection<UserLike> LikedByUsers { get; set; }
         public ICollection<UserLike> LikedUsers { get; set; }
+
+        public ICollection<Message> MessagesSent { get; set; }
+        public ICollection<Message> MessagesReceived { get; set; }
+
+        public ICollection<AppUserRole> UserRoles { get; set; }
 
     }
 }
