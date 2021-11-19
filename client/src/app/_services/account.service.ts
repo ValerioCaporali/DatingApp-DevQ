@@ -5,6 +5,7 @@ import {User} from "../_models/user";
 import {HttpClientModule} from "@angular/common/http";
 import {Observable, ReplaySubject} from "rxjs";
 import {environment} from "../../environments/environment";
+import {PresenceService} from "./presence.service";
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,7 @@ export class AccountService {
   currentUser$ = this.currentUserSource.asObservable()
   username = '';
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private presence: PresenceService) {
   }
 
   // funzione per la richiesta http del login
@@ -28,6 +29,7 @@ export class AccountService {
         this.username = user.username;
         if (user) {
           this.setCurrentUser(user);
+          this.presence.createHubConnection(user);
         }
       })
     )
@@ -41,6 +43,7 @@ export class AccountService {
         this.username = user.username;
         if (user) {
           this.setCurrentUser(user);
+          this.presence.createHubConnection(user);
         }
       })
     )
@@ -60,6 +63,7 @@ export class AccountService {
     localStorage.removeItem('user');
     // @ts-ignore
     this.currentUserSource.next(null);
+    this.presence.stopHubConnection();
   }
 
   // @ts-ignore
