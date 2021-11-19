@@ -34,7 +34,7 @@ namespace API.Controllers
 
 
         // /api/users
-        [Authorize(Roles = "Admin")]
+        // [Authorize(Roles = "Admin")]
         [HttpGet] // endpoint accessibile a tutti
         public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams userParams)
         {

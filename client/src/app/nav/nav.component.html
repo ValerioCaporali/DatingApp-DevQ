@@ -7,19 +7,23 @@
     <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
       <a class="navbar-brand text-light" routerLink="/">Dating App</a>
       <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-        <ng-container *ngIf="accountService.currentUser$ | async"><!-- Angular container for only reserved links that not interfere with styles -->
-        <li class="nav-item active">
-          <a class="nav-link text-light" routerLink="/members" routerLinkActive="active">Matches</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-light" routerLink="/lists" routerLinkActive="active">Lists</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-light" routerLink="/messages" routerLinkActive="active">Messages</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-light" href="#" (click)="logout()">Logout</a>
-        </li>
+        <ng-container *ngIf="accountService.currentUser$ | async">
+          <!-- Angular container for only reserved links that not interfere with styles -->
+          <li class="nav-item active">
+            <a class="nav-link text-light" routerLink="/members" routerLinkActive="active">Matches</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-light" routerLink="/lists" routerLinkActive="active">Lists</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-light" routerLink="/messages" routerLinkActive="active">Messages</a>
+          </li>
+          <li *appHasRole='["Admin", "Moderator"]' class="nav-item">
+            <a class="nav-link text-light" routerLink="/admin" routerLinkActive="active">Admin</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-light" href="#" (click)="logout()">Logout</a>
+          </li>
         </ng-container>
         <li class="nav-item">
           <a class="nav-link text-light" routerLink="/errors" routerLinkActive="active">Errors</a>
@@ -28,14 +32,16 @@
 
       <div class="dropdown" *ngIf="(accountService.currentUser$ | async) as user" dropdown>
         <img src="{{user.photoUrl || './assets/user.png'}}" alt="{{user.knownAs}}">
-        <a class="dropdown-toggle text-light text-decoration-none ml-2" dropdownToggle>Welcome {{user.username | titlecase}}</a>
+        <a class="dropdown-toggle text-light text-decoration-none ml-2"
+           dropdownToggle>Welcome {{user.username | titlecase}}</a>
         <div class="dropdown-menu" *dropdownMenu>
           <a class="Edit Profile dropdown-item" routerLink="/member/edit">Edit</a>
           <div class="dropdown-divider"></div>
           <a class="Logout dropdown-item" (click)="logout()">Logout</a>
         </div>
       </div>
-      <form *ngIf="(accountService.currentUser$ | async) === null" #loginForm="ngForm" class="form-inline my-2 my-lg-0" id="login-form" (ngSubmit)="login()" autocomplete="off">
+      <form *ngIf="(accountService.currentUser$ | async) === null" #loginForm="ngForm" class="form-inline my-2 my-lg-0"
+            id="login-form" (ngSubmit)="login()" autocomplete="off">
         <input name="username" [(ngModel)]="model.username" class="form-control mr-sm-2" type="text"
                placeholder="Username">
         <input name="password" [(ngModel)]="model.password" class="form-control mr-sm-2" type="password"
