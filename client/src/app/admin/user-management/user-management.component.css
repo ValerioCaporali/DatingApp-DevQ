@@ -1,3 +1,15 @@
 .btn-info {
   background-color: #1f9bcf !important;
 }
+
+.fas {
+  font-size: x-large;
+}
+
+.center-icon {
+  margin: auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}

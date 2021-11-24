@@ -10,13 +10,13 @@
         <ng-container *ngIf="accountService.currentUser$ | async">
           <!-- Angular container for only reserved links that not interfere with styles -->
           <li class="nav-item active">
-            <a class="nav-link text-light" routerLink="/members" routerLinkActive="active">Matches</a>
+            <a class="nav-link text-light notification" routerLink="/members" routerLinkActive="active"><span>Matches</span><span *ngIf="presence.onlineUsers$" class="badge">{{(presence.onlineUsers$ | async).length}}</span></a>
           </li>
           <li class="nav-item">
             <a class="nav-link text-light" routerLink="/lists" routerLinkActive="active">Lists</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-light" routerLink="/messages" routerLinkActive="active">Messages</a>
+            <a class="nav-link text-light notification" routerLink="/messages" routerLinkActive="active">Messages</a>
           </li>
           <li *appHasRole='["Admin", "Moderator"]' class="nav-item">
             <a class="nav-link text-light" routerLink="/admin" routerLinkActive="active">Admin</a>

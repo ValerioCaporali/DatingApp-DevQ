@@ -3,12 +3,14 @@
     <tr>
       <th style="width: 30%;">Username</th>
       <th style="width: 40%;">Active roles</th>
-      <th style="width: 30%;"></th>
+      <th style="width: 20%;"></th>
+      <th style="width: 10%;">Online: {{(presence.onlineUsers$ | async).length}}</th>
     </tr>
     <tr *ngFor="let user of users">
       <td>{{user.username}}</td>
       <td>{{user.roles}}</td>
       <td><button (click)="openRolesModal(user)" class="btn btn-info">Edit Roles</button></td>
+      <td><i [ngClass]="{'text-success': (presence.onlineUsers$ | async).includes(user.username), 'fa-user-cog': user.roles.includes('Moderator')}" class="fas fa-user-circle center-icon"></i></td>
     </tr>
   </table>
 </div>

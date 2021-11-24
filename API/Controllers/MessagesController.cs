@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using API.DTOs;
@@ -5,9 +6,11 @@ using API.Entities;
 using API.Extensions;
 using API.Helpers;
 using API.Interfaces;
+using API.SingnalR;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace API.Controllers
 {
@@ -19,12 +22,14 @@ namespace API.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IMessageRepository _messageRepository;
         private readonly IMapper _mapper;
+        private readonly IHubContext<MessageHub> _hubContext;
 
-        public MessagesController(IUserRepository userRepository, IMessageRepository messageRepository, IMapper mapper)
+        public MessagesController(IUserRepository userRepository, IMessageRepository messageRepository, IMapper mapper, IHubContext<MessageHub> hubContext)
         {
             _userRepository = userRepository;
             _messageRepository = messageRepository;
             _mapper = mapper;
+            _hubContext = hubContext;
         }
 
         [HttpPost]
@@ -73,7 +78,19 @@ namespace API.Controllers
         {
             var currentUsername = User.GetUsername();
 
-            return Ok(await _messageRepository.GetMessageThread(currentUsername, username));
+            var messages = await _messageRepository.GetMessageThread(currentUsername, username);
+
+
+            // qui
+
+            // await _hubContext.Clients.User(User.GetUserId().ToString()).SendAsync("ReadMessage",5);
+            Console.WriteLine("Appena prima mandato il messaggio", messages);
+
+            await _hubContext.Clients.All.SendAsync("ReadMessage",5);
+
+            Console.WriteLine("Appena mandato il messaggio");
+
+            return Ok(messages);
         }
 
         [HttpDelete("{id}")]
@@ -94,6 +111,14 @@ namespace API.Controllers
             if (await _messageRepository.SaveAllAsync()) return Ok();
 
             return BadRequest("Problem deleting the message");
+        }
+
+        [HttpPost("{unreadMessagesNumber}")]
+        public async Task<ActionResult<int>> GetUnreadMessagesNumber()
+        {
+            var username = User.GetUsername();
+            var unreadMessagesNumber = await _messageRepository.GetUnreadMessagesNumber(username);
+            return Ok(unreadMessagesNumber);
         }
     }
 }

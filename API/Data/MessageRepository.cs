@@ -6,8 +6,10 @@ using API.DTOs;
 using API.Entities;
 using API.Helpers;
 using API.Interfaces;
+using API.SingnalR;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data
@@ -17,11 +19,20 @@ namespace API.Data
 
         private readonly DataContext _context;
         private readonly IMapper _mapper;
+        private readonly IHubContext<MessageHub> _hubContext;
+        // private readonly MessageHub _messageHub;
 
-        public MessageRepository(DataContext context, IMapper mapper)
+        public MessageRepository(DataContext context, IMapper mapper, IHubContext<MessageHub> hubContext)
         {
             _context = context;
             _mapper = mapper;
+            _hubContext = hubContext;
+            // _messageHub = messageHub;
+        }
+
+        public void AddGroup(Group group)
+        {
+            _context.Groups.Add(group);
         }
 
         public void AddMessage(Message message)
@@ -34,9 +45,24 @@ namespace API.Data
             _context.Messages.Remove(message);
         }
 
+        public async Task<Connection> GetConnection(string connectionId)
+        {
+            return await _context.Connections.FindAsync(connectionId);
+        }
+
+        public async Task<Group> GetGroupForConnection(string connectionId)
+        {
+            return await _context.Groups.Include(c => c.Connections).Where(c => c.Connections.Any(x => x.ConnectionId == connectionId)).FirstOrDefaultAsync();
+        }
+
         public async Task<Message> GetMessage(int id)
         {
             return await _context.Messages.Include(u => u.Sender).Include(u => u.Recipient).SingleOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<Group> GetMessageGroup(string groupName)
+        {
+            return await _context.Groups.Include(x => x.Connections).FirstOrDefaultAsync(x => x.Name == groupName);
         }
 
         public async Task<PagedList<MessageDto>> GetMessagesForUser(MessageParams messageParams)
@@ -67,18 +93,34 @@ namespace API.Data
                 .ToListAsync();
 
             var unreadMessages = messages.Where(m => m.DateRead == null && m.Recipient.UserName == currentUsername).ToList();
+            var readMessagesCount = 0;
+            
 
             if (unreadMessages.Any())
             {
                 foreach (var message in unreadMessages)
                 {
-                    message.DateRead = DateTime.Now;
+                    message.DateRead = DateTime.UtcNow;
+                    readMessagesCount++;
                 }
 
+                await _hubContext.Clients.All.SendAsync("MessageRead", readMessagesCount);
+                
                 await _context.SaveChangesAsync();
             }
 
             return _mapper.Map<IEnumerable<MessageDto>>(messages);
+        }
+
+        public Task<int> GetUnreadMessagesNumber(string username)
+        {
+            var unreadMessagesNumber = _context.Messages.Where(u => u.Recipient.UserName == username && u.DateRead == null).Count()-1;
+            return Task.FromResult(unreadMessagesNumber);
+        }
+
+        public void RemoveConnection(Connection connection)
+        {
+            _context.Connections.Remove(connection);
         }
 
         public async Task<bool> SaveAllAsync()

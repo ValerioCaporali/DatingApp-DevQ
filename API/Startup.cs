@@ -21,6 +21,7 @@ using System.Text;
 using API.Extensions;
 using API.Middleware;
 using API.SignalR;
+using API.SingnalR;
 
 namespace API
 {
@@ -72,6 +73,7 @@ namespace API
             {
                 endpoints.MapControllers();
                 endpoints.MapHub<PresenceHub>("hubs/presence");
+                endpoints.MapHub<MessageHub>("hubs/message");
             });
         }
     }

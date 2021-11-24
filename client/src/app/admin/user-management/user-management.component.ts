@@ -3,6 +3,7 @@ import {AdminService} from "../../_services/admin.service";
 import {User} from "../../_models/user";
 import {BsModalRef, BsModalService} from "ngx-bootstrap/modal";
 import {RolesModalComponent} from "../../modals/roles-modal/roles-modal.component";
+import {PresenceService} from "../../_services/presence.service";
 
 @Component({
   selector: 'app-user-management',
@@ -13,10 +14,11 @@ export class UserManagementComponent implements OnInit {
   users: Partial<User[]>;
   bsModalRef: BsModalRef;
 
-  constructor(private adminService: AdminService, private modalService: BsModalService) { }
+  constructor(private adminService: AdminService, private modalService: BsModalService, public presence: PresenceService) { }
 
   ngOnInit(): void {
     this.getUsersWithRoles();
+    console.log(this.presence.onlineUsers$);
   }
 
   getUsersWithRoles() {
