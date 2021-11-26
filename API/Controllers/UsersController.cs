@@ -17,7 +17,7 @@ using API.Helpers;
 namespace API.Controllers
 {
 
-    [Authorize]
+    [Authorize()]
     public class UsersController : BaseApiController
     {
 

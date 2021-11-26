@@ -52,7 +52,7 @@ export class AccountService {
   // funzione per settare l'utente
   setCurrentUser(user: User) {
     user.roles = [];
-    const roles = this.getDecodedToken(user.token).role;
+    const roles = this.getDecodedToken(user.token).role; // prendo i ruoli dal token
     Array.isArray(roles) ? user.roles = roles : user.roles.push(roles);
     localStorage.setItem('user', JSON.stringify(user));
     this.currentUserSource.next(user);
